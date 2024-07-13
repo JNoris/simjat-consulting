@@ -27,10 +27,12 @@ const Navbar = () => {
         <div className="flex justify-between items-center py-4">
           <h1
             className={`text-2xl font-serif font-bold ${
-              isScrolled ? "text-white" : "text-navy"
+              isScrolled
+                ? "text-white"
+                : "text-navy border-b border-navy border-opacity-30"
             }`}
           >
-            SimJat Consulting
+            SimJat Consulting Inc
           </h1>
           <ul className="flex space-x-6">
             {["home", "services", "about", "contact"].map((item) => (

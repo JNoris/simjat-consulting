@@ -1,11 +1,11 @@
 import React from "react";
 import {
-  CashIcon,
-  OfficeBuildingIcon,
+  BanknotesIcon,
+  BuildingOfficeIcon,
   HeartIcon,
   BriefcaseIcon,
   CalculatorIcon,
-} from "@heroicons/react/outline";
+} from "@heroicons/react/24/outline";
 
 const ServiceCard = ({ title, description, icon: Icon }) => (
   <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition duration-300">
@@ -20,13 +20,13 @@ const Services = () => {
     {
       title: "Personal Accounting",
       description: "Tailored accounting solutions for individuals.",
-      icon: CashIcon,
+      icon: BanknotesIcon,
     },
     {
       title: "Property Accounting",
       description:
         "Specialized accounting for real estate and property management.",
-      icon: OfficeBuildingIcon,
+      icon: BuildingOfficeIcon,
     },
     {
       title: "Non-Profit Accounting",
