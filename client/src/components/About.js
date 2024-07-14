@@ -9,17 +9,17 @@ const About = () => {
         </h2>
         <div className="max-w-3xl mx-auto text-center">
           <p className="text-lg mb-6">
-            SimJat Consulting is a leading accounting firm specializing in
-            personal, property, non-profit, and corporate accounting, as well as
-            bookkeeping services. With our expertise and dedication, we help our
-            clients navigate complex financial landscapes and achieve their
-            goals.
+            Whether you need a little or a lot of help, SimJat Consulting is an
+            accounting firm specializing in personal, property, non-profit, and
+            corporate accounting, as well as bookkeeping services. With
+            expertise and dedication, we help our clients navigate complex
+            financial landscapes and achieve their goals.
           </p>
           <p className="text-lg">
-            Our team of experienced professionals is committed to providing
-            personalized, high-quality services tailored to meet the unique
-            needs of each client. We pride ourselves on our attention to detail,
-            integrity, and commitment to excellence.
+            Committed to providing personalized, high-quality services tailored
+            to meet the unique needs of each client. There's a certain pride in
+            the attention to detail, integrity, and commitment to excellence
+            that's served to every client.
           </p>
         </div>
       </div>
