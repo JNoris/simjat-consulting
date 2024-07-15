@@ -21,31 +21,34 @@ const Contact = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const response = await fetch("http://localhost:5000/api/contact", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        alert("Message sent successfully!");
-        setFormData({
-          name: "",
-          email: "",
-          phone: "",
-          company: "",
-          inquiryType: "personal",
-          message: "",
+    if (e.target.checkValidity()) {
+      try {
+        const response = await fetch("http://localhost:5000/api/contact", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
         });
-      } else {
-        alert("Failed to send message. Please try again.");
+
+        if (response.ok) {
+          alert("Message sent successfully!");
+          setFormData({
+            firstName: "",
+            lastName: "",
+            email: "",
+            phone: "",
+            company: "",
+            message: "",
+            inquiryType: "personal",
+          });
+        } else {
+          alert("Failed to send message. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("An error occurred. Please try again later.");
       }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("An error occurred. Please try again later.");
     }
   };
 
@@ -58,6 +61,7 @@ const Contact = () => {
         <form
           onSubmit={handleSubmit}
           className="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-8"
+          netlify
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>

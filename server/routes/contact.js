@@ -12,14 +12,17 @@ const transporter = nodemailer.createTransport({
 });
 
 router.post("/", async (req, res) => {
-  const { name, email, phone, company, inquiryType, message } = req.body;
+  const { firstName, lastName, email, phone, company, inquiryType, message } =
+    req.body;
+
+  const fullName = `${firstName} ${lastName}`.trim();
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: process.env.EMAIL_USER,
     subject: `New Contact Form Submission - ${inquiryType}`,
     text: `
-      Name: ${name}
+      Name: ${fullName}
       Email: ${email}
       Phone: ${phone}
       Company: ${company}
@@ -29,11 +32,15 @@ router.post("/", async (req, res) => {
   };
 
   try {
+    console.log("Preparing to send email with options:", mailOptions);
     await transporter.sendMail(mailOptions);
+    console.log("Email sent successfully");
     res.status(200).json({ message: "Email sent successfully" });
   } catch (error) {
     console.error("Error sending email:", error);
-    res.status(500).json({ message: "Error sending email" });
+    res
+      .status(500)
+      .json({ message: "Error sending email", error: error.message });
   }
 });
 
