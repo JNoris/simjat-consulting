@@ -7,8 +7,8 @@ const Contact = () => {
     email: "",
     phone: "",
     company: "",
-    message: "",
     inquiryType: "personal",
+    message: "",
   });
 
   const handleChange = (e) => {
