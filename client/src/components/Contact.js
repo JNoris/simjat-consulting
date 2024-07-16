@@ -23,12 +23,19 @@ const Contact = () => {
     e.preventDefault();
     if (e.target.checkValidity()) {
       try {
-        const response = await fetch("/netlify/functions/contact.js", {
+        const response = await fetch("/.netlify/functions/contact", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({
+            name: `${formData.firstName} ${formData.lastName}`,
+            email: formData.email,
+            phone: formData.phone,
+            company: formData.company,
+            inquiryType: formData.inquiryType,
+            message: formData.message,
+          }),
         });
 
         if (response.ok) {
@@ -43,11 +50,12 @@ const Contact = () => {
             inquiryType: "personal",
           });
         } else {
-          alert("Failed to send message. Please try again.");
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to send message");
         }
       } catch (error) {
         console.error("Error:", error);
-        alert("An error occurred. Please try again later.");
+        alert(error.message || "An error occurred. Please try again later.");
       }
     }
   };
