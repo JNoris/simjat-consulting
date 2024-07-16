@@ -23,7 +23,7 @@ const Contact = () => {
     e.preventDefault();
     if (e.target.checkValidity()) {
       try {
-        const response = await fetch("/.netlify/functions/api/contact", {
+        const response = await fetch("/netlify/functions/contact.js", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
