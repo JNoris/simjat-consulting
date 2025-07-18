@@ -8,6 +8,14 @@ module.exports = {
         teal: "#2C7873",
         coral: "#FF6B6B",
         accent: "#FFA400",
+        // Business line colors
+        "accounting-blue": "#1E40AF",
+        "construction-green": "#059669",
+        "security-red": "#DC2626",
+        // Light variants for backgrounds
+        "accounting-light": "#DBEAFE",
+        "construction-light": "#D1FAE5",
+        "security-light": "#FEE2E2",
       },
       fontFamily: {
         sans: ["Roboto", "sans-serif"],
