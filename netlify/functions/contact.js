@@ -1,4 +1,10 @@
 const nodemailer = require("nodemailer");
+const { body, validationResult } = require('express-validator');
+const createDOMPurify = require('dompurify');
+const { JSDOM } = require('jsdom');
+
+const window = new JSDOM('').window;
+const DOMPurify = createDOMPurify(window);
 
 // Simple in-memory rate limiting (for production, use Redis or database)
 const requestCounts = new Map();
@@ -18,7 +24,6 @@ exports.handler = async (event, context) => {
   const now = Date.now();
   const userRequests = requestCounts.get(clientIP) || [];
   
-  // Clean old requests
   const recentRequests = userRequests.filter(timestamp => now - timestamp < RATE_LIMIT_WINDOW);
   
   if (recentRequests.length >= MAX_REQUESTS_PER_WINDOW) {
@@ -31,7 +36,6 @@ exports.handler = async (event, context) => {
     };
   }
   
-  // Record this request
   recentRequests.push(now);
   requestCounts.set(clientIP, recentRequests);
 
@@ -39,7 +43,6 @@ exports.handler = async (event, context) => {
   try {
     requestData = JSON.parse(event.body);
   } catch (parseError) {
-    console.error("JSON parsing error:", parseError);
     return {
       statusCode: 400,
       body: JSON.stringify({ 
@@ -51,68 +54,36 @@ exports.handler = async (event, context) => {
 
   const { name, email, phone, company, inquiryType, message } = requestData;
 
-  // Input validation
-  const validationErrors = [];
-  
-  // Validate required fields
-  if (!name || typeof name !== 'string' || name.trim().length < 2) {
-    validationErrors.push("Name is required and must be at least 2 characters");
-  }
-  
-  if (!email || typeof email !== 'string') {
-    validationErrors.push("Email is required");
-  } else {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      validationErrors.push("Please provide a valid email address");
-    }
-  }
-  
-  if (!message || typeof message !== 'string' || message.trim().length < 10) {
-    validationErrors.push("Message is required and must be at least 10 characters");
-  }
-  
-  // Validate optional fields
-  if (phone && typeof phone === 'string') {
-    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-    if (!phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''))) {
-      validationErrors.push("Please provide a valid phone number");
-    }
-  }
-  
-  if (inquiryType && !['personal', 'business'].includes(inquiryType)) {
-    validationErrors.push("Invalid inquiry type");
-  }
-  
-  // Check field lengths to prevent abuse
-  if (name && name.length > 100) validationErrors.push("Name is too long (max 100 characters)");
-  if (email && email.length > 254) validationErrors.push("Email is too long");
-  if (message && message.length > 5000) validationErrors.push("Message is too long (max 5000 characters)");
-  if (company && company.length > 100) validationErrors.push("Company name is too long (max 100 characters)");
-  
-  if (validationErrors.length > 0) {
+  // Input validation and sanitization
+  const validations = [
+    body('name').notEmpty().withMessage('Name is required').isLength({ min: 2, max: 100 }).withMessage('Name must be between 2 and 100 characters').trim().escape(),
+    body('email').isEmail().withMessage('Please provide a valid email address').isLength({ max: 254 }).withMessage('Email is too long').normalizeEmail(),
+    body('message').notEmpty().withMessage('Message is required').isLength({ min: 10, max: 5000 }).withMessage('Message must be between 10 and 5000 characters').trim().escape(),
+    body('phone').optional().isMobilePhone().withMessage('Please provide a valid phone number').trim().escape(),
+    body('company').optional().isLength({ max: 100 }).withMessage('Company name is too long').trim().escape(),
+    body('inquiryType').optional().isIn(['personal', 'business']).withMessage('Invalid inquiry type').trim().escape()
+  ];
+
+  await Promise.all(validations.map(validation => validation.run({ body: requestData })));
+
+  const errors = validationResult({ body: requestData });
+  if (!errors.isEmpty()) {
     return {
       statusCode: 400,
       body: JSON.stringify({ 
         error: "Validation failed",
-        details: validationErrors
+        details: errors.array()
       })
     };
   }
 
-  // Sanitize inputs (basic HTML escaping)
-  const sanitize = (str) => {
-    if (!str) return str;
-    return str.replace(/[<>]/g, '').trim();
-  };
-  
   const sanitizedData = {
-    name: sanitize(name),
-    email: sanitize(email),
-    phone: sanitize(phone),
-    company: sanitize(company),
-    inquiryType: sanitize(inquiryType),
-    message: sanitize(message)
+    name: DOMPurify.sanitize(name),
+    email: DOMPurify.sanitize(email),
+    phone: DOMPurify.sanitize(phone),
+    company: DOMPurify.sanitize(company),
+    inquiryType: DOMPurify.sanitize(inquiryType),
+    message: DOMPurify.sanitize(message)
   };
 
   let transporter = nodemailer.createTransport({
@@ -150,7 +121,6 @@ exports.handler = async (event, context) => {
   } catch (error) {
     console.error("Error sending email:", error);
     
-    // Provide more specific error messages based on error type
     let errorMessage = "Unable to send message at this time";
     if (error.code === 'EAUTH') {
       errorMessage = "Email service authentication failed";
