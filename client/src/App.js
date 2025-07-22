@@ -1,26 +1,36 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import Navbar from "./components/Navbar";
-import Home from "./components/Home";
-import Services from "./components/Services";
-import About from "./components/About";
-import Contact from "./components/Contact";
-import Footer from "./components/Footer";
-import ScrollToTop from "./components/ScrollToTop";
-// import heroImage from "../assets/hero-image.jpeg";
+import ErrorBoundary from "./components/ErrorBoundary";
+import { ToastProvider } from "./contexts/ToastContext";
+
+const TriServiceHero = lazy(() => import("./components/TriServiceHero"));
+const TriServices = lazy(() => import("./components/TriServices"));
+const About = lazy(() => import("./components/About"));
+const Contact = lazy(() => import("./components/Contact"));
+const Footer = lazy(() => import("./components/Footer"));
+const ScrollToTop = lazy(() => import("./components/ScrollToTop"));
 
 function App() {
   return (
-    <div className="App flex flex-col min-h-screen">
-      <Navbar />
-      <main className="flex-grow">
-        <Home />
-        <Services />
-        <About />
-        <Contact />
-      </main>
-      <Footer />
-      <ScrollToTop />
-    </div>
+    <ErrorBoundary>
+      <ToastProvider>
+        <div className="App flex flex-col min-h-screen">
+          <Navbar />
+          <main className="flex-grow">
+            <Suspense fallback={<div>Loading...</div>}>
+              <TriServiceHero />
+              <TriServices />
+              <About />
+              <Contact />
+            </Suspense>
+          </main>
+          <Suspense fallback={<div></div>}>
+            <Footer />
+            <ScrollToTop />
+          </Suspense>
+        </div>
+      </ToastProvider>
+    </ErrorBoundary>
   );
 }
 
