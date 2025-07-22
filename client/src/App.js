@@ -1,32 +1,47 @@
 import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
-import TriServiceHero from "./components/TriServiceHero";
-import TriServices from "./components/TriServices";
+import Home from "./components/Home";
+import Services from "./components/Services";
 import About from "./components/About";
 import Contact from "./components/Contact";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
-import ErrorBoundary from "./components/ErrorBoundary";
-import { ToastProvider } from "./contexts/ToastContext";
-// import heroImage from "../assets/hero-image.jpeg";
+
+// Service Pages
+import AccountingPage from "./pages/AccountingPage";
+import ConstructionPage from "./pages/ConstructionPage";
+import ITPage from "./pages/ITPage";
+
+// Main Layout Component
+const MainLayout = () => {
+  return (
+    <>
+      <Home />
+      <Services />
+      <About />
+      <Contact />
+    </>
+  );
+};
 
 function App() {
   return (
-    <ErrorBoundary>
-      <ToastProvider>
-        <div className="App flex flex-col min-h-screen">
-          <Navbar />
-          <main className="flex-grow">
-            <TriServiceHero />
-            <TriServices />
-            <About />
-            <Contact />
-          </main>
-          <Footer />
-          <ScrollToTop />
-        </div>
-      </ToastProvider>
-    </ErrorBoundary>
+    <Router>
+      <div className="App flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow">
+          <Routes>
+            <Route path="/" element={<MainLayout />} />
+            <Route path="/accounting" element={<AccountingPage />} />
+            <Route path="/construction" element={<ConstructionPage />} />
+            <Route path="/it" element={<ITPage />} />
+          </Routes>
+        </main>
+        <Footer />
+        <ScrollToTop />
+      </div>
+    </Router>
   );
 }
 

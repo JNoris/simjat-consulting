@@ -1,22 +1,172 @@
-@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Merriweather:wght@300;400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&family=Open+Sans:wght@300;400;600;700&family=Merriweather:wght@300;400;700&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-light-gray text-navy font-sans;
+/* Global Styles */
+html {
+  scroll-behavior: smooth;
 }
 
+body {
+  @apply bg-white text-gray-900 font-sans antialiased;
+}
+
+/* Headings */
 h1,
 h2,
 h3,
 h4,
 h5,
 h6 {
-  @apply font-serif;
+  @apply font-display;
 }
 
+/* Custom Button Styles */
 .btn {
-  @apply bg-teal text-white px-6 py-3 rounded-full text-lg hover:bg-coral transition duration-300;
+  @apply px-6 py-3 rounded-full font-semibold transition-all duration-300 inline-flex items-center justify-center;
+}
+
+.btn-primary {
+  @apply bg-brand-blue text-white hover:bg-brand-gold;
+}
+
+.btn-secondary {
+  @apply bg-brand-gold text-brand-blue hover:bg-brand-blue hover:text-white;
+}
+
+/* Glass Effect */
+.glass {
+  @apply bg-white/10 backdrop-blur-md border border-white/20;
+}
+
+/* Service Color Classes - Accounting */
+.text-accounting-primary {
+  color: #2c7873;
+}
+.text-accounting-secondary {
+  color: #0a2342;
+}
+.bg-accounting-primary {
+  background-color: #2c7873;
+}
+.bg-accounting-secondary {
+  background-color: #0a2342;
+}
+.border-accounting-primary {
+  border-color: #2c7873;
+}
+.hover\:bg-accounting-secondary:hover {
+  background-color: #0a2342;
+}
+.hover\:text-accounting-secondary:hover {
+  color: #0a2342;
+}
+.from-accounting-primary {
+  --tw-gradient-from: #2c7873;
+}
+.to-accounting-secondary {
+  --tw-gradient-to: #0a2342;
+}
+
+/* Service Color Classes - Construction */
+.text-construction-primary {
+  color: #16a34a;
+}
+.text-construction-secondary {
+  color: #064e3b;
+}
+.bg-construction-primary {
+  background-color: #16a34a;
+}
+.bg-construction-secondary {
+  background-color: #064e3b;
+}
+.border-construction-primary {
+  border-color: #16a34a;
+}
+.hover\:bg-construction-secondary:hover {
+  background-color: #064e3b;
+}
+.hover\:text-construction-secondary:hover {
+  color: #064e3b;
+}
+.from-construction-primary {
+  --tw-gradient-from: #16a34a;
+}
+.to-construction-secondary {
+  --tw-gradient-to: #064e3b;
+}
+
+/* Service Color Classes - IT */
+.text-it-primary {
+  color: #6366f1;
+}
+.text-it-secondary {
+  color: #312e81;
+}
+.bg-it-primary {
+  background-color: #6366f1;
+}
+.bg-it-secondary {
+  background-color: #312e81;
+}
+.border-it-primary {
+  border-color: #6366f1;
+}
+.hover\:bg-it-secondary:hover {
+  background-color: #312e81;
+}
+.hover\:text-it-secondary:hover {
+  color: #312e81;
+}
+.from-it-primary {
+  --tw-gradient-from: #6366f1;
+}
+.to-it-secondary {
+  --tw-gradient-to: #312e81;
+}
+
+/* Opacity variations for service colors */
+.bg-accounting-primary\/10 {
+  background-color: rgba(44, 120, 115, 0.1);
+}
+.bg-construction-primary\/10 {
+  background-color: rgba(22, 163, 74, 0.1);
+}
+.bg-it-primary\/10 {
+  background-color: rgba(99, 102, 241, 0.1);
+}
+
+/* Animations */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-400 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500;
 }

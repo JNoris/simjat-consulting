@@ -1,119 +1,19 @@
 const nodemailer = require("nodemailer");
 
-// Simple in-memory rate limiting (for production, use Redis or database)
-const requestCounts = new Map();
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-const MAX_REQUESTS_PER_WINDOW = 3;
-
 exports.handler = async (event, context) => {
   if (event.httpMethod !== "POST") {
-    return { 
-      statusCode: 405, 
-      body: JSON.stringify({ error: "Method Not Allowed" }) 
-    };
+    return { statusCode: 405, body: "Method Not Allowed" };
   }
 
-  // Rate limiting
-  const clientIP = event.headers['x-forwarded-for'] || event.headers['x-real-ip'] || 'unknown';
-  const now = Date.now();
-  const userRequests = requestCounts.get(clientIP) || [];
-  
-  // Clean old requests
-  const recentRequests = userRequests.filter(timestamp => now - timestamp < RATE_LIMIT_WINDOW);
-  
-  if (recentRequests.length >= MAX_REQUESTS_PER_WINDOW) {
-    return {
-      statusCode: 429,
-      body: JSON.stringify({ 
-        error: "Too Many Requests",
-        details: "Please wait before sending another message"
-      })
-    };
-  }
-  
-  // Record this request
-  recentRequests.push(now);
-  requestCounts.set(clientIP, recentRequests);
-
-  let requestData;
-  try {
-    requestData = JSON.parse(event.body);
-  } catch (parseError) {
-    console.error("JSON parsing error:", parseError);
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ 
-        error: "Invalid JSON format",
-        details: "Request body must be valid JSON"
-      })
-    };
-  }
-
-  const { name, email, phone, company, inquiryType, message } = requestData;
-
-  // Input validation
-  const validationErrors = [];
-  
-  // Validate required fields
-  if (!name || typeof name !== 'string' || name.trim().length < 2) {
-    validationErrors.push("Name is required and must be at least 2 characters");
-  }
-  
-  if (!email || typeof email !== 'string') {
-    validationErrors.push("Email is required");
-  } else {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      validationErrors.push("Please provide a valid email address");
-    }
-  }
-  
-  if (!message || typeof message !== 'string' || message.trim().length < 10) {
-    validationErrors.push("Message is required and must be at least 10 characters");
-  }
-  
-  // Validate optional fields
-  if (phone && typeof phone === 'string') {
-    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-    if (!phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''))) {
-      validationErrors.push("Please provide a valid phone number");
-    }
-  }
-  
-  if (inquiryType && !['personal', 'business'].includes(inquiryType)) {
-    validationErrors.push("Invalid inquiry type");
-  }
-  
-  // Check field lengths to prevent abuse
-  if (name && name.length > 100) validationErrors.push("Name is too long (max 100 characters)");
-  if (email && email.length > 254) validationErrors.push("Email is too long");
-  if (message && message.length > 5000) validationErrors.push("Message is too long (max 5000 characters)");
-  if (company && company.length > 100) validationErrors.push("Company name is too long (max 100 characters)");
-  
-  if (validationErrors.length > 0) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ 
-        error: "Validation failed",
-        details: validationErrors
-      })
-    };
-  }
-
-  // Sanitize inputs (basic HTML escaping)
-  const sanitize = (str) => {
-    if (!str) return str;
-    return str.replace(/[<>]/g, '').trim();
-  };
-  
-  const sanitizedData = {
-    name: sanitize(name),
-    email: sanitize(email),
-    phone: sanitize(phone),
-    company: sanitize(company),
-    inquiryType: sanitize(inquiryType),
-    message: sanitize(message)
-  };
+  const {
+    name,
+    email,
+    phone,
+    company,
+    inquiryType,
+    message,
+    ...additionalFields
+  } = JSON.parse(event.body);
 
   let transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
@@ -125,47 +25,57 @@ exports.handler = async (event, context) => {
     },
   });
 
+  // Build additional fields string
+  let additionalInfo = "";
+  Object.entries(additionalFields).forEach(([key, value]) => {
+    if (value) {
+      additionalInfo += `        ${key
+        .replace(/([A-Z])/g, " $1")
+        .trim()}: ${value}\n`;
+    }
+  });
+
   try {
     await transporter.sendMail({
-      from: `"${sanitizedData.name}" <${sanitizedData.email}>`,
-      to: "simjatconsultinginc@gmail.com",
-      subject: `New ${sanitizedData.inquiryType} inquiry from ${sanitizedData.name}`,
+      from: `"${name}" <${email}>`,
+      to: "simjatconsulting@gmail.com",
+      subject: `New ${inquiryType} inquiry from ${name}`,
       text: `
-        Name: ${sanitizedData.name}
-        Email: ${sanitizedData.email}
-        Phone: ${sanitizedData.phone || 'Not provided'}
-        Company: ${sanitizedData.company || 'Not provided'}
-        Inquiry Type: ${sanitizedData.inquiryType}
-        Message: ${sanitizedData.message}
+        Name: ${name}
+        Email: ${email}
+        Phone: ${phone || "Not provided"}
+        Company: ${company || "Not provided"}
+        Inquiry Type: ${inquiryType}
+${additionalInfo}
+        Message: 
+        ${message}
+      `,
+      html: `
+        <h3>New ${inquiryType} Inquiry</h3>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Phone:</strong> ${phone || "Not provided"}</p>
+        <p><strong>Company:</strong> ${company || "Not provided"}</p>
+        <p><strong>Inquiry Type:</strong> ${inquiryType}</p>
+        ${
+          additionalInfo
+            ? `<h4>Additional Information:</h4><pre>${additionalInfo}</pre>`
+            : ""
+        }
+        <h4>Message:</h4>
+        <p>${message.replace(/\n/g, "<br>")}</p>
       `,
     });
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ 
-        success: true,
-        message: "Message sent successfully! We'll get back to you soon."
-      }),
+      body: JSON.stringify({ message: "Email sent successfully" }),
     };
   } catch (error) {
     console.error("Error sending email:", error);
-    
-    // Provide more specific error messages based on error type
-    let errorMessage = "Unable to send message at this time";
-    if (error.code === 'EAUTH') {
-      errorMessage = "Email service authentication failed";
-    } else if (error.code === 'ECONNECTION') {
-      errorMessage = "Unable to connect to email service";
-    } else if (error.responseCode === 550) {
-      errorMessage = "Invalid email address";
-    }
-    
     return {
       statusCode: 500,
-      body: JSON.stringify({ 
-        error: "Email delivery failed",
-        details: errorMessage
-      }),
+      body: JSON.stringify({ message: "Error sending email" }),
     };
   }
 };
